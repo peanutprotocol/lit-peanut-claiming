@@ -4,7 +4,7 @@ import { ProviderType } from "@lit-protocol/constants";
 import { AuthMethod } from "@lit-protocol/types"
 import config from "./config.json";
 import { joinSignature, splitSignature } from "@ethersproject/bytes";
-import { utils } from "ethers";
+import { providers, utils } from "ethers";
 import { Interact } from "./pages/Interact";
 import { Generate } from "./pages/Generate";
 
@@ -30,6 +30,8 @@ const router = createBrowserRouter([
                         relayApiKey: config.relayApiKey,
                       },
                     });
+
+                    const walletProvider = new providers.Web3Provider(window.ethereum);
                   
                     client.initProvider(ProviderType.Google, {
                       redirectUri: window.location.origin + window.location.pathname,
@@ -59,7 +61,7 @@ const router = createBrowserRouter([
                         if(provider != null) {
                             // Get auth method object that has the OAuth token from redirect callback
                             const authMethod: AuthMethod = await provider.authenticate();
-                        
+                            
                             const { authSig } = await litNodeClient.signSessionKey({
                                 authMethods: [authMethod],
                                 expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
@@ -68,10 +70,15 @@ const router = createBrowserRouter([
 
                             const messageHash = utils.id(receiver);
 
+                            const walletAddress = (await walletProvider.send("eth_requestAccounts", []))[0]
+
+                            console.log(walletAddress)
+
                             const response = await litNodeClient.executeJs({
                                 ipfsId: config.ipfsId,
                                 authSig,
                                 jsParams: {
+                                    claimer: walletAddress,
                                     access_token: authMethod.accessToken,
                                     publicKey: config.pkpPublicKey
                                 },
@@ -85,6 +92,8 @@ const router = createBrowserRouter([
                             })
 
                             const splitSig = splitSignature(encodedSig)
+
+                            console.log(splitSig)
 
                             signature = splitSig
 

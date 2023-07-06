@@ -15,7 +15,7 @@ contract LockAndClaimVaultFactory {
     }
 
     function create(
-        bytes memory _hashedEmail,
+        bytes32 _hashedEmail,
         uint256 _amount,
         address _token
     ) public returns(

@@ -2,9 +2,9 @@
   {
     "inputs": [
       {
-        "internalType": "bytes",
+        "internalType": "bytes32",
         "name": "_hashedEmail",
-        "type": "bytes"
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -41,6 +41,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
+      {
         "internalType": "uint8",
         "name": "_v",
         "type": "uint8"
@@ -66,9 +71,9 @@
     "name": "hashedEmail",
     "outputs": [
       {
-        "internalType": "bytes",
+        "internalType": "bytes32",
         "name": "",
-        "type": "bytes"
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -90,9 +95,9 @@
   {
     "inputs": [
       {
-        "internalType": "bytes",
+        "internalType": "bytes32",
         "name": "_hashedEmail",
-        "type": "bytes"
+        "type": "bytes32"
       }
     ],
     "name": "setReceiver",
@@ -115,6 +120,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
       {
         "internalType": "uint8",
         "name": "_v",

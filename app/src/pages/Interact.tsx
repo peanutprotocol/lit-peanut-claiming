@@ -22,7 +22,7 @@ import vaultABI from "../../src/utils/ClaimAndLock.json";
 
 export const Interact = () => {
 
-  const { receiver, token, amount, vaultAddress, client, wallet, signature }: any = useLoaderData();
+  const { receiver, amount, vaultAddress, client, wallet, signature }: any = useLoaderData();
 
   const [address, setAddress] = React.useState<string>('');
 
@@ -61,8 +61,11 @@ export const Interact = () => {
         signer
       )
 
+      console.log(await vault.hashedEmail())
+
       const claim = await vault.claim(
-          signature.v, signature.r, signature.s
+        address,
+        signature.v, signature.r, signature.s
       )
 
       const tx = await claim.wait();

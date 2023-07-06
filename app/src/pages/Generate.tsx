@@ -78,7 +78,7 @@ export const Generate = () => {
     )
 
     const tx = await factory.create(
-        utils.toUtf8Bytes(utils.id(email)),
+        utils.arrayify(utils.id(email)),
         utils.parseEther(amount),
         token
     )
