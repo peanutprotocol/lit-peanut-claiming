@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "ipfs": "^0.66.0",
+    "ipfs-http-client": "^60.0.0",
+    "nanoid": "^4.0.2",
+    "orbit-db": "^0.29.1-a7cea49.0"
+  }
+}

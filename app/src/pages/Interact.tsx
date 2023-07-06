@@ -29,9 +29,7 @@ export const Interact = () => {
   const [signer, setSigner] = React.useState<providers.JsonRpcSigner>();
 
   const [res, setResponse] = React.useState<string>("");
-
-  const [balanceChanges, setBalanceChanges] = React.useState<any>([]);
-
+  
   const [loading, setLoading] = React.useState<boolean>(false);
 
   const connect = async () => {
@@ -109,26 +107,6 @@ export const Interact = () => {
               Claiming <b>{utils.formatEther(amount)} USDC</b>
             </Text>
           </VStack>
-          {wallet && (
-            <VStack
-              w={"100%"}
-              alignItems={"flex-start"}
-              justifyContent={"start"}
-              borderRadius={"xl"}
-              borderWidth={1}
-              p={4}
-            >
-              {balanceChanges?.map((change: any, i: number) => (
-                <HStack w={"full"} key={i} justifyContent={"space-between"}>
-                  <Image src={change.logo} maxWidth={"20px"} rounded={"md"} />
-                  <Text fontSize={"xs"}>
-                    {change.from == wallet.address.toLowerCase() ? "-" : "+"}{" "}
-                    {parseFloat(change.amount).toFixed(2)} {change.symbol}
-                  </Text>
-                </HStack>
-              ))}
-            </VStack>
-          )}
           {loading ? (
             <Spinner />
           ) : res ? (
