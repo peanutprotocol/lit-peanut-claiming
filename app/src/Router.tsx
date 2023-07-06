@@ -1,7 +1,7 @@
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import { isSignInRedirect, LitAuthClient } from "@lit-protocol/lit-auth-client";
 import { ProviderType } from "@lit-protocol/constants";
-import { AuthMethod } from "@lit-protocol/types"
+import { AuthMethod } from "@lit-protocol/types";
 import config from "./config.json";
 import { joinSignature, splitSignature } from "@ethersproject/bytes";
 import { providers, utils } from "ethers";
@@ -9,116 +9,123 @@ import { Interact } from "./pages/Interact";
 import { Generate } from "./pages/Generate";
 
 const router = createBrowserRouter([
-    {
+  {
+    path: "/",
+    element: <Outlet />,
+    children: [
+      {
         path: "/",
-		element: <Outlet/>,
-		children: [
-            {
-                path: "/",
-				element: <Generate/>,
+        element: <Generate />,
+      },
+      {
+        path: "/:id",
+        loader: async ({ params }) => {
+          const id = params.id || "";
+          const res = await fetch("http://localhost:8080/" + id);
+          const data = await res.json();
+          const { token, receiver, amount, vaultAddress } = data;
+          console.log(data);
+          const client = new LitAuthClient({
+            litRelayConfig: {
+              relayApiKey: config.relayApiKey,
             },
-			{
-                path: "/:id",
-                loader: async ({ params }) => {
-                    const id = params.id || "";
-                    const res = await fetch('http://localhost:8080/' + id)
-                    const data = await res.json();
-                    const { token, receiver, amount, vaultAddress } = data;
-                    console.log(data);
-                    const client = new LitAuthClient({
-                      litRelayConfig: {
-                        relayApiKey: config.relayApiKey,
-                      },
-                    });
+          });
 
-                    const walletProvider = new providers.Web3Provider(window.ethereum);
-                  
-                    client.initProvider(ProviderType.Google, {
-                      redirectUri: window.location.origin + window.location.pathname,
-                    }); 
+          const walletProvider = new providers.Web3Provider(window.ethereum);
 
-                    let wallet, email, signature;
+          client.initProvider(ProviderType.Google, {
+            redirectUri: window.location.origin + window.location.pathname,
+          });
 
-                    if(isSignInRedirect(window.location.href)) {
+          let wallet, email, signature;
 
-                        const id_token = new URL(window.location.href).searchParams.get('id_token');
+          if (isSignInRedirect(window.location.href)) {
+            const id_token = new URL(window.location.href).searchParams.get(
+              "id_token"
+            );
 
-                        email = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + id_token)
-                            .then(res => res.json())
-                            .then(res => res.email);
+            email = await fetch(
+              "https://oauth2.googleapis.com/tokeninfo?id_token=" + id_token
+            )
+              .then((res) => res.json())
+              .then((res) => res.email);
 
-                        const litNodeClient = new LitNodeClient({
-                            litNetwork: 'serrano',
-                            debug: false,
-                        });
-                        await litNodeClient.connect();
-                        
-                        // Get the provider that was used to sign in
-                        const provider = client.getProvider(
-                            ProviderType.Google,
-                        );
-                        
-                        if(provider != null) {
-                            // Get auth method object that has the OAuth token from redirect callback
-                            const authMethod: AuthMethod = await provider.authenticate();
-                            
-                            const { authSig } = await litNodeClient.signSessionKey({
-                                authMethods: [authMethod],
-                                expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-                                resources: [],
-                            });
+            const litNodeClient = new LitNodeClient({
+              litNetwork: "serrano",
+              debug: false,
+            });
+            await litNodeClient.connect();
 
-                            const messageHash = utils.id(receiver);
+            // Get the provider that was used to sign in
+            const provider = client.getProvider(ProviderType.Google);
 
-                            const walletAddress = (await walletProvider.send("eth_requestAccounts", []))[0]
+            if (provider != null) {
+              // Get auth method object that has the OAuth token from redirect callback
+              const authMethod: AuthMethod = await provider.authenticate();
 
-                            console.log(walletAddress)
+              const { authSig } = await litNodeClient.signSessionKey({
+                authMethods: [authMethod],
+                expiration: new Date(
+                  Date.now() + 1000 * 60 * 60 * 24
+                ).toISOString(),
+                resources: [],
+              });
 
-                            const response = await litNodeClient.executeJs({
-                                ipfsId: config.ipfsId,
-                                authSig,
-                                jsParams: {
-                                    claimer: walletAddress,
-                                    access_token: authMethod.accessToken,
-                                    publicKey: config.pkpPublicKey
-                                },
-                            });
-                            console.log(response);
+              const messageHash = utils.id(receiver);
 
-                            const encodedSig = joinSignature({
-                                r: '0x' + response.signatures.sig1.r,
-                                s: '0x' + response.signatures.sig1.s,
-                                v: response.signatures.sig1.recid
-                            })
+              const walletAddress = (
+                await walletProvider.send("eth_requestAccounts", [])
+              )[0];
 
-                            const splitSig = splitSignature(encodedSig)
+              console.log(walletAddress);
 
-                            console.log(splitSig)
-
-                            signature = splitSig
-
-                            console.log("Vault Address:", vaultAddress)
-
-                            console.log("Lit Action ETH Address:", utils.verifyMessage(messageHash, encodedSig))
-                        }
-                    }
-
-                    return { receiver, token, amount, vaultAddress, client, wallet, email, signature };
+              const response = await litNodeClient.executeJs({
+                ipfsId: config.ipfsId,
+                authSig,
+                jsParams: {
+                  claimer: walletAddress,
+                  access_token: authMethod.accessToken,
+                  publicKey: config.pkpPublicKey,
                 },
-				element: <Interact/>,
-			},
-            // {
-			// 	path: "/:address/:function",
-            //     loader: async ({ params }) => {
-            //         const address = params.address || "";
-            //         const signer = await getSigner();
-            //         const code = await getSourceCode(address);
-            //         return {address, code: code[0], signer, func: params.function};
-            //     },
-			// 	element: <Interact/>,
-			// },
-		]
-    },
+              });
+              console.log(response);
+
+              const encodedSig = joinSignature({
+                r: "0x" + response.signatures.sig1.r,
+                s: "0x" + response.signatures.sig1.s,
+                v: response.signatures.sig1.recid,
+              });
+
+              const splitSig = splitSignature(encodedSig);
+
+              console.log(splitSig);
+
+              signature = splitSig;
+
+              console.log("Vault Address:", vaultAddress);
+
+              console.log(
+                "Lit Action ETH Address:",
+                utils.verifyMessage(messageHash, encodedSig)
+              );
+            }
+          }
+
+          return {
+            receiver,
+            token,
+            amount,
+            vaultAddress,
+            client,
+            wallet,
+            email,
+            signature,
+          };
+        },
+        element: <Interact />,
+      },
+    ],
+  },
 ]);
 
-export default router
+export default router;
